@@ -16,11 +16,13 @@ export default function UploadForm() {
   });
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState(''); // Add status message
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) return;
     setLoading(true);
+    setStatus('Uploading...');
 
     try {
       const data = new FormData();
@@ -34,11 +36,19 @@ export default function UploadForm() {
         body: data,
       });
       
+      const result = await response.json();
+      console.log('Upload response:', result);
+      
       if (response.ok) {
-        router.push('/#works');
+        setStatus('Upload successful!');
+        console.log('Upload completed successfully');
+      } else {
+        setStatus(`Upload failed: ${result.message}`);
+        console.error('Upload failed:', result);
       }
     } catch (error) {
-      console.error('Upload failed:', error);
+      console.error('Upload error:', error);
+      setStatus('Upload failed: ' + (error as Error).message);
     } finally {
       setLoading(false);
     }
@@ -54,7 +64,6 @@ export default function UploadForm() {
           className="w-full p-2 border rounded"
           required
         />
-        
         <input
           type="text"
           placeholder="Title"
@@ -124,6 +133,7 @@ export default function UploadForm() {
         >
           {loading ? 'Uploading...' : 'Upload Work'}
         </button>
+        {status && <p className="text-center mt-4">{status}</p>}
       </div>
     </form>
   );

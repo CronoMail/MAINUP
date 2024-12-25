@@ -9,16 +9,24 @@ export const config = {
   },
 };
 
+// Add type for GitHub content response
+type GitHubContent = {
+  type: "file";
+  content: string;
+  sha: string;
+  // ... other properties
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
-  try {
-    const octokit = new Octokit({ 
-      auth: process.env.GITHUB_PAT 
-    });
+  const octokit = new Octokit({
+    auth: process.env.GITHUB_PAT
+  });
 
+  try {
     const form = formidable();
     const [fields, files] = await form.parse(req);
     
@@ -41,16 +49,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       branch: 'main'
     });
 
-    // 2. Get current index.html
+    // 2. Get current index.html content with proper typing
     const { data: indexFile } = await octokit.repos.getContent({
       owner: process.env.GITHUB_OWNER!,
       repo: process.env.GITHUB_REPO!,
       path: 'index.html',
       ref: 'main'
-    });
+    }) as { data: GitHubContent };  // Add type assertion here
 
-    if (!('content' in indexFile)) {
-      throw new Error('Unable to get index.html content');
+    // Log the fetched index.html content
+    console.log('Fetched index.html content:', indexFile);
+
+    if (!('content' in indexFile) || !('sha' in indexFile)) {
+      throw new Error('Invalid index.html file data');
     }
 
     // 3. Create new work HTML with correct image path
@@ -74,10 +85,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         </div>
       </div>`;
 
+    // Log the new work HTML
+    console.log('New work HTML:', newWorkHtml);
+
     // 4. Update index.html with proper content decoding
     const htmlContent = Buffer.from(indexFile.content, 'base64').toString();
     const galleryRegex = /(id="work"[^>]*>)([\s\S]*?)(<\/div><!-- \.portfolio-inner -->)/;
     const updatedHtmlContent = htmlContent.replace(galleryRegex, `$1\n${newWorkHtml}$2$3`);
+
+    // Log the updated index.html content
+    console.log('Updated index.html content:', updatedHtmlContent);
 
     await octokit.repos.createOrUpdateFileContents({
       owner: process.env.GITHUB_OWNER!,
@@ -85,13 +102,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       path: 'index.html',
       message: `Update index.html with new artwork: ${fields.title?.[0]}`,
       content: Buffer.from(updatedHtmlContent).toString('base64'),
-      branch: 'main',
-      sha: indexFile.sha
+      sha: indexFile.sha, // Add this line
+      branch: 'main'
     });
 
     res.status(200).json({ message: 'Upload successful' });
   } catch (error) {
     console.error('Upload error:', error);
-    res.status(500).json({ message: 'Upload failed', error: error.message });
+    console.error('Error details:', {
+      message: error.message,
+      status: error.status,
+      response: error.response?.data
+    });
+    res.status(500).json({ 
+      message: 'Upload failed', 
+      error: error.message,
+      details: error.response?.data 
+    });
   }
 }
