@@ -93,12 +93,12 @@ export default function UploadForm() {
           className="w-full p-2 border rounded"
           required
         >
-          <option value="illustration">Illustration</option>
+          <option value="landscape">Illustration</option>
           <option value="fanart">FanArt</option>
-          <option value="Product">Product</option>
-          <option value="Product">Product</option>
-          <option value="Product">Product</option>
-          <option value="Product">Product</option>
+          <option value="occhara">OC</option>
+          <option value="comm">Commission</option>
+          <option value="male">Male</option>
+          <option value="vtube">Vtubers</option>
         </select>
 
         <input
