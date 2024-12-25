@@ -3,12 +3,17 @@ import formidable from 'formidable';
 import fs from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import { Octokit } from '@octokit/rest';
 
 export const config = {
   api: {
     bodyParser: false,
   },
 };
+
+const octokit = new Octokit({
+  auth: process.env.GITHUB_TOKEN,
+});
 
 export default async function handler(
   req: NextApiRequest,
@@ -39,9 +44,19 @@ export default async function handler(
     const newPath = path.join(uploadDir, filename);
     await fs.promises.copyFile(file.filepath, newPath);
 
-    // Read index.html
-    const indexPath = path.join(process.cwd(), 'index.html');
-    let htmlContent = fs.readFileSync(indexPath, 'utf8');
+    // Read index.html from GitHub
+    const { data: indexFile } = await octokit.repos.getContent({
+      owner: process.env.GITHUB_OWNER!,
+      repo: process.env.GITHUB_REPO!,
+      path: 'index.html',
+      ref: 'main'
+    });
+
+    if (!('content' in indexFile)) {
+      throw new Error('Unable to get index.html content');
+    }
+
+    const htmlContent = Buffer.from(indexFile.content, 'base64').toString();
 
     // Create new work HTML
     const twitterHandle = fields.twitterHandle?.[0] || '';
@@ -67,13 +82,21 @@ export default async function handler(
 
     // Find the gallery-section and insert the new work at the beginning
     const galleryRegex = /(id="work"[^>]*>)([\s\S]*?)(<\/div><!-- \.portfolio-inner -->)/;
-    htmlContent = htmlContent.replace(
+    const updatedHtmlContent = htmlContent.replace(
       galleryRegex,
       `$1\n${newWorkHtml}$2$3`
     );
 
-    // Write updated HTML back to file
-    fs.writeFileSync(indexPath, htmlContent);
+    // Write updated HTML back to GitHub
+    await octokit.repos.createOrUpdateFileContents({
+      owner: process.env.GITHUB_OWNER!,
+      repo: process.env.GITHUB_REPO!,
+      path: 'index.html',
+      message: 'Add new work',
+      content: Buffer.from(updatedHtmlContent).toString('base64'),
+      sha: indexFile.sha,
+      branch: 'main'
+    });
 
     res.status(200).json({ message: 'Upload successful' });
   } catch (error) {
