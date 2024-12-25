@@ -1,5 +1,6 @@
 export interface Work {
   id: string;
+  mcol: string;
   title: string;
   category: string;
   subcategory?: string;  // Added

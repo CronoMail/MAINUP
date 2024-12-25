@@ -89,7 +89,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         // Construct new artwork HTML
         const newWorkHtml = `
-          <div class="folio-item work-item dsn-col-md-2 dsn-col-lg-3 ${fields.category?.[0] || 'illustration'} column" data-aos="fade-up">
+          <div ${fields.mcol?.[0]}class="folio-item work-item dsn-col-md-2 dsn-col-lg-3 ${fields.category?.[0] || 'illustration'} column" data-aos="fade-up">
             <div class="has-popup box-img before-z-index z-index-0 p-relative over-hidden folio-item__thumb" data-overlay="0">
               <a class="folio-item__thumb-link" target="_blank" href="assets/Artworks NEW/${filename}" data-size="905x1280">
                 <img class="cover-bg-img" src="assets/Artworks NEW/${filename}" alt="${fields.title?.[0]}">
@@ -99,8 +99,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               <div class="folio-item__cat">${fields.category?.[0] || 'illustration'}/${fields.subcategory?.[0] || ''} ${new Date().getFullYear()}</div>
               <h4 class="folio-item__title">${fields.title?.[0]}</h4>
             </div>
-            ${twitterUrl ? `
-            <a target="_blank" href="${twitterUrl}" title="Twitter" class="folio-item__project-link">Twitter</a>
+            ${fields.twitterLink ? `
+            <a target="_blank" href="${fields.twitterLink?.[0]}" title="Twitter" class="folio-item__project-link">Twitter</a>
             <div class="folio-item__caption">
               <p>Twitter</p>
             </div>` : ''}

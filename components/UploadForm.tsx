@@ -11,6 +11,7 @@ export default function UploadForm() {
     twitterHandle: '',
     twitterId: '',
     twitterUrl: '',
+    mcol: '',
     description: '',
     twitterLink: ''
   });
@@ -54,6 +55,7 @@ export default function UploadForm() {
           subcategory: '',
           twitterHandle: '',
           twitterId: '',
+          mcol: '',
           twitterUrl: '',
           description: '',
           twitterLink: ''
