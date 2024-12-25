@@ -1,0 +1,72 @@
+/* Upload Form Styling */
+.upload-form {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: #ffffff;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+.file-upload-area {
+  border: 2px dashed #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem; /* Reduced padding */
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  max-width: 200px; /* Limit container width */
+  margin: 0 auto;
+}
+
+.file-upload-area:hover {
+  border-color: #3b82f6;
+  background-color: #f8fafc;
+}
+
+.preview-image {
+  width: 80px;  /* Fixed small width */
+  height: 80px; /* Fixed small height */
+  object-fit: cover;
+  border-radius: 8px;
+  margin: 0 auto;
+}
+
+.form-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.form-input,
+.form-select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.form-input:focus,
+.form-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.submit-button {
+  background-color: #3b82f6;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.submit-button:hover {
+  background-color: #2563eb;
+}
+
+.submit-button:disabled {
+  background-color: #94a3b8;
+  cursor: not-allowed;
+}

@@ -20,20 +20,25 @@ export default function UploadForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file) return;
+    if (!file) {
+      setStatus('Please select a file');
+      return;
+    }
     setLoading(true);
     setStatus('Uploading...');
 
     try {
-      const data = new FormData();
-      data.append('image', file);
+      const formDataToSend = new FormData();
+      formDataToSend.append('file', file); // Make sure field name is 'file'
+      
+      // Append other form fields
       Object.entries(formData).forEach(([key, value]) => {
-        if (value) data.append(key, value);
+        if (value) formDataToSend.append(key, value);
       });
 
       const response = await fetch('/api/upload', {
-        method: 'POST',  // Ensure this is POST
-        body: data,
+        method: 'POST',
+        body: formDataToSend,
       });
       
       const result = await response.json();
@@ -41,13 +46,22 @@ export default function UploadForm() {
       
       if (response.ok) {
         setStatus('Upload successful!');
-        console.log('Upload completed successfully');
+        // Optional: Clear form
+        setFile(null);
+        setFormData({
+          title: '',
+          category: 'illustration',
+          subcategory: '',
+          twitterHandle: '',
+          twitterId: '',
+          twitterUrl: '',
+          description: '',
+          twitterLink: ''
+        });
       } else {
         setStatus(`Upload failed: ${result.message}`);
-        console.error('Upload failed:', result);
       }
     } catch (error) {
-      console.error('Upload error:', error);
       setStatus('Upload failed: ' + (error as Error).message);
     } finally {
       setLoading(false);

@@ -1,7 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { Octokit } from '@octokit/rest';
 import formidable from 'formidable';
-import fs from 'fs';
+import { Octokit } from '@octokit/rest';
+import fs from 'fs/promises';
+import path from 'path';
 
 export const config = {
   api: {
@@ -9,13 +10,10 @@ export const config = {
   },
 };
 
-// Add type for GitHub content response
-type GitHubContent = {
-  type: "file";
+interface GitHubContent {
   content: string;
   sha: string;
-  // ... other properties
-};
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -23,101 +21,121 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const octokit = new Octokit({
-    auth: process.env.GITHUB_PAT
+    auth: process.env.GITHUB_PAT 
   });
 
   try {
+    // Parse form data
     const form = formidable();
-    const [fields, files] = await form.parse(req);
-    
-    const file = files.image?.[0];
-    if (!file) {
-      return res.status(400).json({ message: 'No image uploaded' });
-    }
+    form.parse(req, async (err, fields, files) => {
+      if (err) {
+        return res.status(500).json({ message: 'Error parsing form data' });
+      }
 
-    // Read file content
-    const imageContent = await fs.promises.readFile(file.filepath, { encoding: 'base64' });
-    const filename = `${Date.now()}${file.originalFilename?.substring(file.originalFilename.lastIndexOf('.'))}`;
+      // Type assertion and validation
+      const uploadedFile = files.file?.[0] || files.file;
+      if (!uploadedFile || !uploadedFile.filepath) {
+        return res.status(400).json({ message: 'No valid file uploaded' });
+      }
 
-    // 1. Upload image to correct path
-    await octokit.repos.createOrUpdateFileContents({
-      owner: process.env.GITHUB_OWNER!,
-      repo: process.env.GITHUB_REPO!,
-      path: `assets/Artworks NEW/${filename}`, // Fixed path
-      message: `Upload artwork: ${fields.title?.[0]}`,
-      content: imageContent,
-      branch: 'main'
+      try {
+        const imageBuffer = await fs.readFile(uploadedFile.filepath);
+        const filename = uploadedFile.originalFilename || 'image.jpg';
+
+        // Construct Twitter URL if available
+        let twitterUrl = '';
+        if (fields.twitterId?.[0] && fields.twitterHandle?.[0]) {
+          twitterUrl = `https://twitter.com/${fields.twitterHandle[0]}/status/${fields.twitterId[0]}`;
+        } else if (fields.twitterLink?.[0]) {
+          twitterUrl = fields.twitterLink[0];
+        }
+
+        // Check if the image file already exists
+        let imageSha: string | undefined;
+        try {
+          const { data: existingImage } = await octokit.repos.getContent({
+            owner: process.env.GITHUB_OWNER || '',
+            repo: process.env.GITHUB_REPO || '',
+            path: `assets/Artworks NEW/${filename}`
+          }) as { data: GitHubContent };
+          imageSha = existingImage.sha;
+        } catch (error) {
+          // File doesn't exist, proceed without sha
+        }
+
+        // Upload image to GitHub
+        await octokit.repos.createOrUpdateFileContents({
+          owner: process.env.GITHUB_OWNER || '',
+          repo: process.env.GITHUB_REPO || '',
+          path: `public/assets/Artworks NEW/${filename}`,
+          message: 'Upload new artwork',
+          content: imageBuffer.toString('base64'),
+          sha: imageSha
+        });
+
+        // Get current index.html content
+        const { data: fileData } = await octokit.repos.getContent({
+          owner: process.env.GITHUB_OWNER || '',
+          repo: process.env.GITHUB_REPO || '',
+          path: 'index.html',
+        }) as { data: GitHubContent };
+
+        const currentContent = Buffer.from(fileData.content, 'base64').toString();
+
+        // Construct new artwork HTML
+        const newWorkHtml = `
+          <div class="folio-item work-item dsn-col-md-2 dsn-col-lg-3 ${fields.category?.[0] || 'illustration'} column" data-aos="fade-up">
+            <div class="has-popup box-img before-z-index z-index-0 p-relative over-hidden folio-item__thumb" data-overlay="0">
+              <a class="folio-item__thumb-link" target="_blank" href="assets/Artworks NEW/${filename}" data-size="905x1280">
+                <img class="cover-bg-img" src="assets/Artworks NEW/${filename}" alt="${fields.title?.[0]}">
+              </a>
+            </div>
+            <div class="folio-item__info">
+              <div class="folio-item__cat">${fields.category?.[0] || 'illustration'}/${fields.subcategory?.[0] || ''} ${new Date().getFullYear()}</div>
+              <h4 class="folio-item__title">${fields.title?.[0]}</h4>
+            </div>
+            ${twitterUrl ? `
+            <a target="_blank" href="${twitterUrl}" title="Twitter" class="folio-item__project-link">Twitter</a>
+            <div class="folio-item__caption">
+              <p>Twitter</p>
+            </div>` : ''}
+          </div>`;
+
+        // Update the regex pattern to target gallery-section div
+        const galleryRegex = /(id="gallery-section"[^>]*>)([\s\S]*?)(<\/div>)/;
+
+        // Modify the HTML insertion to add at the start of gallery-section
+        const updatedContent = currentContent.replace(
+          galleryRegex,
+          (match, openingTag, content, closingTag) => {
+            return `${openingTag}
+            ${newWorkHtml}
+            ${content}${closingTag}`;
+          }
+        );
+
+        // Save locally
+        const localDir = path.join(process.cwd(), 'saved-html');
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const localPath = path.join(localDir, `index-${timestamp}.html`);
+
+        // Create directory if it doesn't exist
+        await fs.mkdir(localDir, { recursive: true });
+        
+        // Save the file
+        await fs.writeFile(localPath, updatedContent);
+        
+        console.log(`Saved local copy to: ${localPath}`);
+        console.log('Successfully pushed updated index.html to GitHub');
+
+        res.status(200).json({ message: 'Upload successful', localPath });
+      } catch (error) {
+        console.error('Error during upload:', error);
+        res.status(500).json({ message: 'Upload failed', error });
+      }
     });
-
-    // 2. Get current index.html content with proper typing
-    const { data: indexFile } = await octokit.repos.getContent({
-      owner: process.env.GITHUB_OWNER!,
-      repo: process.env.GITHUB_REPO!,
-      path: 'index.html',
-      ref: 'main'
-    }) as { data: GitHubContent };  // Add type assertion here
-
-    // Log the fetched index.html content
-    console.log('Fetched index.html content:', indexFile);
-
-    if (!('content' in indexFile) || !('sha' in indexFile)) {
-      throw new Error('Invalid index.html file data');
-    }
-
-    // 3. Create new work HTML with correct image path
-    const twitterHandle = fields.twitterHandle?.[0] || '';
-    const twitterUrl = `https://x.com/${twitterHandle}/status/${fields.twitterId?.[0] || ''}`;
-    
-    const newWorkHtml = `
-      <div class="folio-item work-item dsn-col-md-2 dsn-col-lg-3 ${fields.category?.[0] || 'illustration'} column" data-aos="fade-up">
-        <div class="has-popup box-img before-z-index z-index-0 p-relative over-hidden folio-item__thumb" data-overlay="0">
-          <a class="folio-item__thumb-link" target="blank" href="assets/Artworks NEW/${filename}" data-size="905x1280">
-            <img class="cover-bg-img" src="assets/Artworks NEW/${filename}" alt="${fields.title?.[0]}">
-          </a>
-        </div>
-        <div class="folio-item__info">
-          <div class="folio-item__cat">${fields.category?.[0] || 'illustration'}/${fields.subcategory?.[0] || ''} ${new Date().getFullYear()}</div>
-          <h4 class="folio-item__title">${fields.title?.[0]}</h4>
-        </div>
-        <a target="blank" href="${twitterUrl}" title="Twitter" class="folio-item__project-link">Twitter</a>
-        <div class="folio-item__caption">
-          <p>Twitter</p>
-        </div>
-      </div>`;
-
-    // Log the new work HTML
-    console.log('New work HTML:', newWorkHtml);
-
-    // 4. Update index.html with proper content decoding
-    const htmlContent = Buffer.from(indexFile.content, 'base64').toString();
-    const galleryRegex = /(id="work"[^>]*>)([\s\S]*?)(<\/div><!-- \.portfolio-inner -->)/;
-    const updatedHtmlContent = htmlContent.replace(galleryRegex, `$1\n${newWorkHtml}$2$3`);
-
-    // Log the updated index.html content
-    console.log('Updated index.html content:', updatedHtmlContent);
-
-    await octokit.repos.createOrUpdateFileContents({
-      owner: process.env.GITHUB_OWNER!,
-      repo: process.env.GITHUB_REPO!,
-      path: 'index.html',
-      message: `Update index.html with new artwork: ${fields.title?.[0]}`,
-      content: Buffer.from(updatedHtmlContent).toString('base64'),
-      sha: indexFile.sha, // Add this line
-      branch: 'main'
-    });
-
-    res.status(200).json({ message: 'Upload successful' });
   } catch (error) {
-    console.error('Upload error:', error);
-    console.error('Error details:', {
-      message: error.message,
-      status: error.status,
-      response: error.response?.data
-    });
-    res.status(500).json({ 
-      message: 'Upload failed', 
-      error: error.message,
-      details: error.response?.data 
-    });
+    console.error('Error during upload:', error);
+    res.status(500).json({ message: 'Upload failed', error });
   }
 }
