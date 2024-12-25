@@ -1,4 +1,3 @@
-
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import type { Work } from '../types/work';
@@ -31,7 +30,7 @@ export default function UploadForm() {
       });
 
       const response = await fetch('/api/upload', {
-        method: 'POST',
+        method: 'POST',  // Ensure this is POST
         body: data,
       });
       
