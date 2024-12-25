@@ -4,32 +4,44 @@ import formidable from 'formidable';
 import fs from 'fs';
 
 export const config = {
-  api: { bodyParser: false }
+  api: {
+    bodyParser: false,
+  },
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ message: 'Method not allowed' });
+  }
+
   try {
-    const octokit = new Octokit({ auth: process.env.GITHUB_PAT });
+    const octokit = new Octokit({ 
+      auth: process.env.GITHUB_PAT 
+    });
+
     const form = formidable();
     const [fields, files] = await form.parse(req);
     
     const file = files.image?.[0];
-    if (!file) return res.status(400).json({ message: 'No image uploaded' });
+    if (!file) {
+      return res.status(400).json({ message: 'No image uploaded' });
+    }
 
-    // 1. Upload image first
+    // Read file content
     const imageContent = await fs.promises.readFile(file.filepath, { encoding: 'base64' });
     const filename = `${Date.now()}${file.originalFilename?.substring(file.originalFilename.lastIndexOf('.'))}`;
-    
+
+    // 1. Upload image to correct path
     await octokit.repos.createOrUpdateFileContents({
       owner: process.env.GITHUB_OWNER!,
       repo: process.env.GITHUB_REPO!,
-      path: `public/ArtworkNEW/${filename}`,
+      path: `assets/Artworks NEW/${filename}`, // Fixed path
       message: `Upload artwork: ${fields.title?.[0]}`,
       content: imageContent,
       branch: 'main'
     });
 
-    // 2. Then update HTML
+    // 2. Get current index.html
     const { data: indexFile } = await octokit.repos.getContent({
       owner: process.env.GITHUB_OWNER!,
       repo: process.env.GITHUB_REPO!,
@@ -41,15 +53,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw new Error('Unable to get index.html content');
     }
 
-    const htmlContent = Buffer.from(indexFile.content, 'base64').toString();
+    // 3. Create new work HTML with correct image path
     const twitterHandle = fields.twitterHandle?.[0] || '';
     const twitterUrl = `https://x.com/${twitterHandle}/status/${fields.twitterId?.[0] || ''}`;
     
     const newWorkHtml = `
       <div class="folio-item work-item dsn-col-md-2 dsn-col-lg-3 ${fields.category?.[0] || 'illustration'} column" data-aos="fade-up">
         <div class="has-popup box-img before-z-index z-index-0 p-relative over-hidden folio-item__thumb" data-overlay="0">
-          <a class="folio-item__thumb-link" target="blank" href="assets/Artworks NEW/${filename}" title="${fields.title?.[0]}" data-size="905x1280">
-            <img class="cover-bg-img" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-dsn-src="assets/Artworks NEW/${filename}" alt="${fields.title?.[0]}">
+          <a class="folio-item__thumb-link" target="blank" href="assets/Artworks NEW/${filename}" data-size="905x1280">
+            <img class="cover-bg-img" src="assets/Artworks NEW/${filename}" alt="${fields.title?.[0]}">
           </a>
         </div>
         <div class="folio-item__info">
@@ -62,6 +74,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         </div>
       </div>`;
 
+    // 4. Update index.html with proper content decoding
+    const htmlContent = Buffer.from(indexFile.content, 'base64').toString();
     const galleryRegex = /(id="work"[^>]*>)([\s\S]*?)(<\/div><!-- \.portfolio-inner -->)/;
     const updatedHtmlContent = htmlContent.replace(galleryRegex, `$1\n${newWorkHtml}$2$3`);
 
