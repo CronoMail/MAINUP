@@ -4,13 +4,15 @@ import type { Work } from '../types/work';
 
 export default function UploadForm() {
   const router = useRouter();
-  const [formData, setFormData] = useState<Omit<Work, 'id' | 'image'>>({
+  const [formData, setFormData] = useState<Omit<Work, 'id' | 'imageSrc' | 'date'>>({
     title: '',
     category: 'illustration', // Default category matching existing works
     subcategory: '',
     twitterHandle: '',
     twitterId: '',
-    description: ''
+    twitterUrl: '',
+    description: '',
+    twitterLink: ''
   });
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
