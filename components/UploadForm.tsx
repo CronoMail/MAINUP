@@ -111,23 +111,7 @@ export default function UploadForm() {
           className="w-full p-2 border rounded"
         />
         
-        <input
-          type="text"
-          placeholder="Twitter Handle (without @)"
-          value={formData.twitterHandle}
-          onChange={(e) => setFormData({...formData, twitterHandle: e.target.value})}
-          className="w-full p-2 border rounded"
-          required
-        />
-
-        <input
-          type="text"
-          placeholder="Twitter Post ID"
-          value={formData.twitterId}
-          onChange={(e) => setFormData({...formData, twitterId: e.target.value})}
-          className="w-full p-2 border rounded"
-          required
-        />
+       
         
         <input
           type="url"

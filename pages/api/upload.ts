@@ -89,7 +89,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         // Construct new artwork HTML
         const newWorkHtml = `
-          <div ${fields.mcol?.[0]}class="folio-item work-item dsn-col-md-2 dsn-col-lg-3 ${fields.category?.[0] || 'illustration'} column" data-aos="fade-up">
+
+             <!-- ========== IMAGE ${fields.title?.[0]} ========== -->
+
+          <div class="folio-item work-item dsn-col-md-2 dsn-col-lg-3 ${fields.category?.[0] || 'illustration'} column" data-aos="fade-up">
             <div class="has-popup box-img before-z-index z-index-0 p-relative over-hidden folio-item__thumb" data-overlay="0">
               <a class="folio-item__thumb-link" target="_blank" href="assets/Artworks NEW/${filename}" data-size="905x1280">
                 <img class="cover-bg-img" src="assets/Artworks NEW/${filename}" alt="${fields.title?.[0]}">
@@ -104,18 +107,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             <div class="folio-item__caption">
               <p>Twitter</p>
             </div>` : ''}
-          </div>`;
+          </div>
 
-        // Update the regex pattern to target gallery-section div
-        const galleryRegex = /(id="gallery-section"[^>]*>)([\s\S]*?)(<\/div>)/;
+          <!-- ========== IMAGE END ========== -->
 
-        // Modify the HTML insertion to add at the start of gallery-section
+          `;
+
+        // Find first image in gallery and add mt-80 class to it
         const updatedContent = currentContent.replace(
-          galleryRegex,
-          (match, openingTag, content, closingTag) => {
-            return `${openingTag}
-            ${newWorkHtml}
-            ${content}${closingTag}`;
+          /(id="gallery-section"[^>]*>)([\s\S]*?)(<div[^>]*class="[^"]*folio-item[^"]*")/,
+          (match, openingTag, content, firstImageDiv) => {
+            // Add mt-80 to the first existing image
+            const modifiedFirstImageDiv = firstImageDiv.replace(
+              'class="',
+              'class="mt-80 '
+            );
+            return `${openingTag}${newWorkHtml}${modifiedFirstImageDiv}`;
           }
         );
 
