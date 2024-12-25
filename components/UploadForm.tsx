@@ -96,6 +96,9 @@ export default function UploadForm() {
           <option value="illustration">Illustration</option>
           <option value="fanart">FanArt</option>
           <option value="Product">Product</option>
+          <option value="Product">Product</option>
+          <option value="Product">Product</option>
+          <option value="Product">Product</option>
         </select>
 
         <input
