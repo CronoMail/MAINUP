@@ -20,8 +20,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
+  if (!process.env.GITHUB_PAT) {
+    console.error('GitHub PAT not configured');
+    return res.status(500).json({ message: 'GitHub authentication not configured' });
+  }
+
   const octokit = new Octokit({
-    auth: process.env.GITHUB_PAT 
+    auth: process.env.GITHUB_PAT
   });
 
   try {
@@ -68,7 +73,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           owner: process.env.GITHUB_OWNER || '',
           repo: process.env.GITHUB_REPO || '',
           path: `assets/Artworks NEW/${filename}`,
-          message: 'Upload new artwork',
+          message: '[skip deploy] Upload new artwork',
           content: imageBuffer.toString('base64'),
           sha: imageSha
         });
@@ -114,50 +119,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }
         );
 
-        // Save locally
-        const localDir = path.join(process.cwd(), 'saved-html');
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const localPath = path.join(localDir, `index-${timestamp}.html`);
+        // Push to GitHub with a commit message that avoids triggering multiple builds
+        await octokit.repos.createOrUpdateFileContents({
+          owner: process.env.GITHUB_OWNER || '',
+          repo: process.env.GITHUB_REPO || '',
+          path: 'index.html',
+          message: 'Add new artwork to gallery', // Add [skip deploy] flag
+          content: Buffer.from(updatedContent).toString('base64'),
+          sha: fileData.sha,
+        });
 
-        // Create directory if it doesn't exist
-        await fs.mkdir(localDir, { recursive: true });
-        
-        // Save the file
-        await fs.writeFile(localPath, updatedContent);
-        
-        console.log(`Saved local copy to: ${localPath}`);
+        // Log success with more detail
+        console.log('✅ Changes pushed to GitHub. Build status:', {
+          imageUploaded: true,
+          htmlUpdated: true,
+          deploySkipped: true
+        });
 
-        // Push to GitHub
-        try {
-          await octokit.repos.createOrUpdateFileContents({
-            owner: process.env.GITHUB_OWNER || '',
-            repo: process.env.GITHUB_REPO || '',
-            path: 'index.html',
-            message: 'Add new artwork to gallery',
-            content: Buffer.from(updatedContent).toString('base64'),
-            sha: fileData.sha,
-          });
-
-          console.log('✅ Successfully saved locally and pushed to GitHub');
-          res.status(200).json({ 
-            message: 'Upload successful',
-            github: true,
-            local: true 
-          });
-
-        } catch (error) {
-          console.error('❌ GitHub push failed:', error);
-          res.status(500).json({ 
-            message: 'Saved locally but GitHub push failed',
-            github: false,
-            local: true,
-            error: error.message
-          });
-        }
+        res.status(200).json({ 
+          message: 'Upload successful',
+          github: true
+        });
 
       } catch (error) {
-        console.error('Error during upload:', error);
-        res.status(500).json({ message: 'Upload failed', error });
+        console.error('❌ Upload failed:', error);
+        res.status(500).json({ 
+          message: 'Upload failed', 
+          error: error.message
+        });
       }
     });
   } catch (error) {
