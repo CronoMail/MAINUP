@@ -37,6 +37,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(500).json({ message: 'Error parsing form data' });
       }
 
+      // Check password
+      if (!fields.password || fields.password[0] !== process.env.UPLOAD_PASSWORD) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
       // Type assertion and validation
       const uploadedFile = Array.isArray(files.file) ? files.file[0] : files.file;
       if (!uploadedFile || !uploadedFile.filepath) {
@@ -94,7 +99,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
           <div class="folio-item work-item dsn-col-md-2 dsn-col-lg-3 ${fields.category?.[0] || 'illustration'} column" data-aos="fade-up">
             <div class="has-popup box-img before-z-index z-index-0 p-relative over-hidden folio-item__thumb" data-overlay="0">
-              <a class="folio-item__thumb-link" target="_blank" href="assets/Artworks NEW/${filename}" data-size="905x1280">
+              <a class="folio-item__thumb-link box-img" target="_blank" href="assets/Artworks NEW/${filename}" data-size="905x1280">
                 <img class="cover-bg-img" src="assets/Artworks NEW/${filename}" alt="${fields.title?.[0]}">
               </a>
             </div>

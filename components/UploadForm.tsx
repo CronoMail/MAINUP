@@ -4,6 +4,8 @@ import type { Work } from '../types/work';
 
 export default function UploadForm() {
   const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [password, setPassword] = useState('');
   const [formData, setFormData] = useState<Omit<Work, 'id' | 'imageSrc' | 'date'>>({
     title: '',
     category: 'illustration', // Default category matching existing works
@@ -11,13 +13,48 @@ export default function UploadForm() {
     twitterHandle: '',
     twitterId: '',
     twitterUrl: '',
-    mcol: '',
     description: '',
+    mcol: '',
     twitterLink: ''
   });
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(''); // Add status message
+
+  // Add password check
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password === process.env.NEXT_PUBLIC_UPLOAD_PASSWORD) {
+      setIsAuthenticated(true);
+    } else {
+      setStatus('Invalid password');
+    }
+  };
+
+  // Show password form if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <form onSubmit={handlePasswordSubmit} className="max-w-md mx-auto p-4 bg-white rounded-lg shadow">
+        <div className="space-y-4">
+          <input
+            type="password"
+            placeholder="Enter password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full p-2 border rounded"
+            required
+          />
+          <button 
+            type="submit"
+            className="w-full bg-[#1DA1F2] text-white p-2 rounded hover:bg-[#1a91da]"
+          >
+            Unlock Upload Form
+          </button>
+        </div>
+        {status && <div className="text-red-500 mt-2">{status}</div>}
+      </form>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +68,7 @@ export default function UploadForm() {
     try {
       const formDataToSend = new FormData();
       formDataToSend.append('file', file); // Make sure field name is 'file'
+      formDataToSend.append('password', password); // Append password for server-side verification
       
       // Append other form fields
       Object.entries(formData).forEach(([key, value]) => {
