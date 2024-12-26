@@ -136,7 +136,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           owner: process.env.GITHUB_OWNER || '',
           repo: process.env.GITHUB_REPO || '',
           path: 'index.html',
-          message: 'Add new artwork to gallery', // Add [skip deploy] flag
+          message: '[deploy] Add new artwork to gallery', 
           content: Buffer.from(updatedContent).toString('base64'),
           sha: fileData.sha,
         });
