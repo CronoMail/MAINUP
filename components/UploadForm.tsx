@@ -24,7 +24,7 @@ export default function UploadForm() {
   // Add password check
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === process.env.P_UPLOAD_PASSWORD) {
+    if (password === process.env.NEXT_PUBLIC_UPLOAD_PASSWORD) {
       setIsAuthenticated(true);
     } else {
       setStatus('Invalid password');
