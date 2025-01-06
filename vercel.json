@@ -1,10 +1,13 @@
-
 {
   "functions": {
     "api/upload.ts": {
       "maxDuration": 60,
-      "memory": 1024,
-      "maxPayloadSize": "10mb"
+      "memory": 1024
+    }
+  },
+  "api": {
+    "bodyParser": {
+      "sizeLimit": "10mb"
     }
   }
 }

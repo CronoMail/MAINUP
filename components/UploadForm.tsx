@@ -21,6 +21,8 @@ export default function UploadForm() {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(''); // Add status message
 
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
+
   // Add password check
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,6 +64,13 @@ export default function UploadForm() {
       setStatus('Please select a file');
       return;
     }
+
+    // Add file size check
+    if (file.size > MAX_FILE_SIZE) {
+      setStatus('File size too large. Maximum size is 10MB');
+      return;
+    }
+
     setLoading(true);
     setStatus('Uploading...');
 
@@ -117,6 +126,7 @@ export default function UploadForm() {
           onChange={(e) => setFile(e.target.files?.[0] || null)}
           className="w-full p-2 border rounded"
           required
+          maxLength={MAX_FILE_SIZE}
         />
         <input
           type="text"
