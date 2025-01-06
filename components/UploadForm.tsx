@@ -67,10 +67,9 @@ export default function UploadForm() {
 
     try {
       const formDataToSend = new FormData();
-      formDataToSend.append('file', file); // Make sure field name is 'file'
-      formDataToSend.append('password', password); // Append password for server-side verification
+      formDataToSend.append('file', file);
+      formDataToSend.append('password', password);
       
-      // Append other form fields
       Object.entries(formData).forEach(([key, value]) => {
         if (value) formDataToSend.append(key, value);
       });
@@ -78,14 +77,13 @@ export default function UploadForm() {
       const response = await fetch('/api/upload', {
         method: 'POST',
         body: formDataToSend,
+        // Remove content-type header to let browser set it with boundary
       });
       
       const result = await response.json();
-      console.log('Upload response:', result);
       
       if (response.ok) {
         setStatus('Upload successful!');
-        // Optional: Clear form
         setFile(null);
         setFormData({
           title: '',

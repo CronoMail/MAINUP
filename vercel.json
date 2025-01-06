@@ -1,26 +1,25 @@
 {
-    "functions": {
-      "pages/api/upload": {
-        "maxDuration": 60,
-        "memory": 1024
-      }
-    },
-    "routes": [
-      {
-        "src": "/api/upload",
-        "dest": "/api/upload",
-        "methods": ["POST"],
-        "headers": {
-          "Access-Control-Allow-Origin": "*",
-          "Content-Type": "application/json"
-        }
-      }
-    ],
-    "images": {
-      "sizes": [256, 640, 1080, 2048, 3840],
-      "contentSecurityPolicy": "script-src 'none'; frame-src 'none'; sandbox;",
-      "formats": ["image/webp"],
-      "minimumCacheTTL": 60,
-      "domains": []
+  "functions": {
+    "pages/api/upload": {
+      "maxDuration": 60,
+      "memory": 1024
     }
+  },
+  "routes": [
+    {
+      "src": "/api/upload",
+      "dest": "/api/upload",
+      "methods": ["POST"],
+      "headers": {
+        "Access-Control-Allow-Origin": "*"
+      }
+    }
+  ],
+  "images": {
+    "sizes": [256, 640, 1080, 2048, 3840],
+    "contentSecurityPolicy": "script-src 'none'; frame-src 'none'; sandbox;",
+    "formats": ["image/webp"],
+    "minimumCacheTTL": 60,
+    "domains": []
+  }
 }
