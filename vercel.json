@@ -12,10 +12,15 @@
         "methods": ["POST"],
         "headers": {
           "Access-Control-Allow-Origin": "*",
-          "Content-Type": "application/json",
-          "max-http-header-size": "32768",
-          "max-http-buffer-size": "10485760"
+          "Content-Type": "application/json"
         }
       }
-    ]
+    ],
+    "images": {
+      "sizes": [256, 640, 1080, 2048, 3840],
+      "contentSecurityPolicy": "script-src 'none'; frame-src 'none'; sandbox;",
+      "formats": ["image/webp"],
+      "minimumCacheTTL": 60,
+      "domains": []
+    }
 }

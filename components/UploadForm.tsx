@@ -1,5 +1,44 @@
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
+import imageCompression from 'browser-image-compression';
+
+const FileUploadComponent = () => {
+  const [file, setFile] = useState<File | null>(null);
+
+  const compressImage = async (file: File) => {
+    const options = {
+      maxSizeMB: 8,
+      maxWidthOrHeight: 3840,
+      useWebWorker: true
+    };
+    
+    try {
+      return await imageCompression(file, options);
+    } catch (error) {
+      console.error('Error compressing image:', error);
+      return file;
+    }
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files[0];
+    if (file) {
+      const compressedFile = await compressImage(file);
+      setFile(compressedFile);
+      // ...existing code to handle the upload...
+    }
+  };
+
+  return (
+    <div>
+      <input type="file" onChange={handleFileUpload} />
+      {file && <p>File ready for upload: {file.name}</p>}
+    </div>
+  );
+};
+
+export default FileUploadComponent;
+import React, { useState } from 'react';
 import type { Work } from '../types/work';
 
 export default function UploadForm() {
