@@ -38,7 +38,7 @@ const FileUploadComponent = () => {
 };
 
 export default FileUploadComponent;
-import React, { useState } from 'react';
+
 import type { Work } from '../types/work';
 
 export default function UploadForm() {
