@@ -67,32 +67,13 @@ export default function UploadForm() {
   }
 
   const uploadFile = async (file: File, formData: FormData) => {
-    const CHUNK_SIZE = 1024 * 1024; // 1MB chunks
-    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
-    
-    for (let chunk = 0; chunk < totalChunks; chunk++) {
-      const start = chunk * CHUNK_SIZE;
-      const end = Math.min(start + CHUNK_SIZE, file.size);
-      const fileChunk = file.slice(start, end);
-      
-      const chunkFormData = new FormData();
-      chunkFormData.append('file', fileChunk);
-      chunkFormData.append('chunk', chunk.toString());
-      chunkFormData.append('totalChunks', totalChunks.toString());
-      
-      // Add other form data
-      formData.forEach((value, key) => {
-        chunkFormData.append(key, value);
-      });
+    const response = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData
+    });
   
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: chunkFormData
-      });
-  
-      if (!response.ok) {
-        throw new Error(`Upload failed: ${response.statusText}`);
-      }
+    if (!response.ok) {
+      throw new Error(`Upload failed: ${response.statusText}`);
     }
   };
 
