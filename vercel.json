@@ -1,6 +1,6 @@
 {
     "functions": {
-      "api/upload.ts": {
+      "/api/upload": {
         "maxDuration": 60,
         "memory": 1024
       }
@@ -8,7 +8,7 @@
     "routes": [
       {
         "src": "/api/upload",
-        "dest": "/api/upload.ts",
+        "dest": "/api/upload",
         "methods": ["POST"],
         "headers": {
           "Access-Control-Allow-Origin": "*",
@@ -18,4 +18,4 @@
         }
       }
     ]
-  }
+}
