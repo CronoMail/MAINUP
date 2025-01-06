@@ -1,5 +1,6 @@
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
+import imageCompression from 'browser-image-compression';
 import type { Work } from '../types/work';
 
 export default function UploadForm() {
@@ -20,6 +21,15 @@ export default function UploadForm() {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(''); // Add status message
+
+  const compressImage = async (file: File) => {
+    const options = {
+      maxSizeMB: 8,
+      maxWidthOrHeight: 3920,
+      useWebWorker: true,
+    };
+    return await imageCompression(file, options);
+  };
 
   // Add password check
   const handlePasswordSubmit = (e: React.FormEvent) => {
@@ -56,51 +66,53 @@ export default function UploadForm() {
     );
   }
 
+  const uploadFile = async (file: File, formData: FormData) => {
+    const CHUNK_SIZE = 1024 * 1024; // 1MB chunks
+    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+    
+    for (let chunk = 0; chunk < totalChunks; chunk++) {
+      const start = chunk * CHUNK_SIZE;
+      const end = Math.min(start + CHUNK_SIZE, file.size);
+      const fileChunk = file.slice(start, end);
+      
+      const chunkFormData = new FormData();
+      chunkFormData.append('file', fileChunk);
+      chunkFormData.append('chunk', chunk.toString());
+      chunkFormData.append('totalChunks', totalChunks.toString());
+      
+      // Add other form data
+      formData.forEach((value, key) => {
+        chunkFormData.append(key, value);
+      });
+  
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: chunkFormData
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Upload failed: ${response.statusText}`);
+      }
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) {
       setStatus('Please select a file');
       return;
     }
+  
     setLoading(true);
-    setStatus('Uploading...');
-
+    setStatus('Compressing image...');
+  
     try {
+      const compressedFile = await compressImage(file);
       const formDataToSend = new FormData();
-      formDataToSend.append('file', file); // Make sure field name is 'file'
-      formDataToSend.append('password', password); // Append password for server-side verification
+      formDataToSend.append('password', password);
       
-      // Append other form fields
-      Object.entries(formData).forEach(([key, value]) => {
-        if (value) formDataToSend.append(key, value);
-      });
-
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formDataToSend,
-      });
-      
-      const result = await response.json();
-      console.log('Upload response:', result);
-      
-      if (response.ok) {
-        setStatus('Upload successful!');
-        // Optional: Clear form
-        setFile(null);
-        setFormData({
-          title: '',
-          category: 'illustration',
-          subcategory: '',
-          twitterHandle: '',
-          twitterId: '',
-          mcol: '',
-          twitterUrl: '',
-          description: '',
-          twitterLink: ''
-        });
-      } else {
-        setStatus(`Upload failed: ${result.message}`);
-      }
+      await uploadFile(compressedFile, formDataToSend);
+      setStatus('Upload successful');
     } catch (error) {
       setStatus('Upload failed: ' + (error as Error).message);
     } finally {

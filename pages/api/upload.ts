@@ -1,8 +1,9 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import formidable from 'formidable';
+import formidable, { Part } from 'formidable';
 import { Octokit } from '@octokit/rest';
 import fs from 'fs/promises';
 import path from 'path';
+import { Readable } from 'stream';
 
 export const config = {
   api: {
@@ -29,12 +30,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     auth: process.env.GITHUB_PAT
   });
 
-  try {
-    // Parse form data
-    const form = formidable();
+  const form = new formidable.IncomingForm({
+    keepExtensions: true,
+    maxFileSize: 10 * 1024 * 1024 // 10MB total limit
+  });
+
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+
+    form.onPart = (part) => {
+      if (!part.originalFilename) {
+        form._handlePart(part);
+        return;
+      }
+
+      part.on('data', (buffer) => {
+        chunks.push(buffer);
+      });
+
+      part.on('end', () => {
+        // Process complete chunk
+        const completeFile = Buffer.concat(chunks);
+        // Handle file upload...
+      });
+    };
+
     form.parse(req, async (err, fields, files) => {
       if (err) {
-        return res.status(500).json({ message: 'Error parsing form data' });
+        res.status(500).json({ message: 'Upload failed' });
+        return resolve(undefined);
       }
 
       // Check password
@@ -159,10 +183,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           message: 'Upload failed', 
           error: error.message
         });
+        resolve(undefined);
       }
     });
-  } catch (error) {
-    console.error('Error during upload:', error);
-    res.status(500).json({ message: 'Upload failed', error });
-  }
+  });
 }

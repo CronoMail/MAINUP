@@ -11,12 +11,12 @@
   "dependencies": {
     "@octokit/rest": "^21.0.2",
     "@types/next": "^8.0.7",
+    "browser-image-compression": "^1.0.17",
     "formidable": "^3.5.2",
     "next": "^15.1.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "uuid": "^9.0.0",
-    "browser-image-compression": "^1.0.15"
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@types/formidable": "^3.4.0",
