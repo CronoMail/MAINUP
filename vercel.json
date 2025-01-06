@@ -1,13 +1,21 @@
-{
-  "functions": {
+
+"functions": {
     "api/upload.ts": {
       "maxDuration": 60,
       "memory": 1024
     }
   },
-  "api": {
-    "bodyParser": {
-      "sizeLimit": "10mb"
+  "routes": [
+    {
+      "src": "/api/upload",
+      "dest": "/api/upload.ts",
+      "methods": ["POST"],
+      "headers": {
+        "Access-Control-Allow-Origin": "*"
+      }
     }
+  ],
+  "bodyParser": {
+    "sizeLimit": "10mb"
   }
 }
