@@ -1,21 +1,21 @@
 {
-  "functions": {
-    "api/upload.ts": {
-      "maxDuration": 60,
-      "memory": 1024
-    }
-  },
-  "routes": [
-    {
-      "src": "/api/upload",
-      "dest": "/api/upload.ts",
-      "methods": ["POST"],
-      "headers": {
-        "Access-Control-Allow-Origin": "*"
+    "functions": {
+      "api/upload.ts": {
+        "maxDuration": 60,
+        "memory": 1024
       }
-    }
-  ],
-  "bodyParser": {
-    "sizeLimit": "10mb"
+    },
+    "routes": [
+      {
+        "src": "/api/upload",
+        "dest": "/api/upload.ts",
+        "methods": ["POST"],
+        "headers": {
+          "Access-Control-Allow-Origin": "*",
+          "Content-Type": "application/json",
+          "max-http-header-size": "32768",
+          "max-http-buffer-size": "10485760"
+        }
+      }
+    ]
   }
-}
