@@ -3,3 +3,4 @@ node_modules
 saved-html/
 .vercel
 .env*.local
+.next
