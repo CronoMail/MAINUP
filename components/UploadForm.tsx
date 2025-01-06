@@ -1,44 +1,5 @@
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
-import imageCompression from 'browser-image-compression';
-
-const FileUploadComponent = () => {
-  const [file, setFile] = useState<File | null>(null);
-
-  const compressImage = async (file: File) => {
-    const options = {
-      maxSizeMB: 8,
-      maxWidthOrHeight: 3840,
-      useWebWorker: true
-    };
-    
-    try {
-      return await imageCompression(file, options);
-    } catch (error) {
-      console.error('Error compressing image:', error);
-      return file;
-    }
-  };
-
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files[0];
-    if (file) {
-      const compressedFile = await compressImage(file);
-      setFile(compressedFile);
-      // ...existing code to handle the upload...
-    }
-  };
-
-  return (
-    <div>
-      <input type="file" onChange={handleFileUpload} />
-      {file && <p>File ready for upload: {file.name}</p>}
-    </div>
-  );
-};
-
-export default FileUploadComponent;
-
 import type { Work } from '../types/work';
 
 export default function UploadForm() {
@@ -59,8 +20,6 @@ export default function UploadForm() {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(''); // Add status message
-
-  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
 
   // Add password check
   const handlePasswordSubmit = (e: React.FormEvent) => {
@@ -103,13 +62,6 @@ export default function UploadForm() {
       setStatus('Please select a file');
       return;
     }
-
-    // Add file size check
-    if (file.size > MAX_FILE_SIZE) {
-      setStatus('File size too large. Maximum size is 10MB');
-      return;
-    }
-
     setLoading(true);
     setStatus('Uploading...');
 
@@ -165,7 +117,6 @@ export default function UploadForm() {
           onChange={(e) => setFile(e.target.files?.[0] || null)}
           className="w-full p-2 border rounded"
           required
-          maxLength={MAX_FILE_SIZE}
         />
         <input
           type="text"
