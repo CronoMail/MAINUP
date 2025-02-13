@@ -144,7 +144,7 @@ export default function UploadForm() {
 
         <select
           value={formData.category231}
-          onChange={(e) => setFormData({...formData, category: e.target.value})}
+          onChange={(e) => setFormData({...formData, category231: e.target.value})}
           className="w-full p-2 border rounded"
           required
         >
