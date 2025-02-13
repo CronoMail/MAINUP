@@ -104,7 +104,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               </a>
             </div>
             <div class="folio-item__info">
-              <div class="folio-item__cat">${fields.category?.[0] || 'illustration'}/${fields.subcategory?.[0] || ''} ${new Date().getFullYear()}</div>
+              <div class="folio-item__cat">${fields.category231?.[0] || 'illustration'}/${fields.subcategory?.[0] || ''} ${new Date().getFullYear()}</div>
               <h4 class="folio-item__title">${fields.title?.[0]}</h4>
             </div>
             ${fields.twitterLink ? `

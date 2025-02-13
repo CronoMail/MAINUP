@@ -3,6 +3,7 @@ export interface Work {
   mcol: string;
   title: string;
   category: string;
+  category231: string;  // Added
   subcategory?: string;  // Added
   imageSrc: string;
   twitterUrl: string;
