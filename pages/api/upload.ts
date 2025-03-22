@@ -95,10 +95,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         // Construct new artwork HTML
         const newWorkHtml = `
        
-        <!-- ========== IMAGE ${fields.title?.[0]} ========== -->
+                                <!-- ========== IMAGE ${fields.title?.[0]} ========== -->
         
-        
-        <div
+                                         <div
                                             class="folio-item work-item dsn-col-md-2 dsn-col-lg-3 ${fields.category?.[0] || 'illustration'} column"
                                             data-aos="fade-up">
                                             <div
