@@ -98,7 +98,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                                 <!-- ========== IMAGE ${fields.title?.[0]} ========== -->
         
                                          <div
-                                            class="folio-item work-item dsn-col-md-2 dsn-col-lg-3 ${fields.category?.[0] || 'illustration'} column"
+                                            class="folio-item work-item dsn-col-md-2 dsn-col-lg-3 ${fields.category?.[0] || '.illust'} column"
                                             data-aos="fade-up">
                                             <div
                                                 class="has-popup box-img before-z-index z-index-0 p-relative over-hidden folio-item__thumb"
@@ -115,7 +115,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                                             </div>
                                             <div class="folio-item__info">
                                                 <div
-                                                    class="folio-item__cat">${fields.category231?.[0] || 'illustration'}/${fields.subcategory?.[0] || ''} ${new Date().getFullYear()}</div>
+                                                    class="folio-item__cat">${fields.category231?.[0] || '.illust'}/${fields.subcategory?.[0] || ''} ${new Date().getFullYear()}</div>
                                                 <h4
                                                     class="folio-item__title">${fields.title?.[0]}</h4>
                                             </div>

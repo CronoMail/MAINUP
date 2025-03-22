@@ -134,7 +134,7 @@ export default function UploadForm() {
           required
         >
           <option value="illust">illustration</option>
-          <option value=".landscape">Landscape</option>
+          <option value="landscape">Landscape</option>
           <option value="fanart">FanArt</option>
           <option value="occhara">OC</option>
           <option value="comm">Commission</option>
