@@ -115,7 +115,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         isExternal: ${Boolean(twitterUrl)},
         category: [${categories.map(c => `'${c}'`).join(', ')}],
         description: '${fields.description?.[0] || ''}',
-        src: 'public/art/${filename}',
+        src: '/art/${filename}',
         overlay: 6
     },`;
 
