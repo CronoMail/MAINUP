@@ -108,7 +108,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         // Create new portfolio item
         const newPortfolioItem = `
-          /* ========== IMAGE ${fields.title?.[0] || 'New Artwork'}" ========== */
+          /* ========== IMAGE ${fields.title?.[0] || 'New Artwork'} ========== */
     {
         id: ${nextId},
         title: "${fields.title?.[0] || 'New Artwork'}",
