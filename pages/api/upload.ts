@@ -108,6 +108,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         // Create new portfolio item
         const newPortfolioItem = `
+          /* ========== IMAGE ${fields.title?.[0] || 'New Artwork'}" ========== */
     {
         id: ${nextId},
         title: "${fields.title?.[0] || 'New Artwork'}",
@@ -117,7 +118,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         description: '${fields.description?.[0] || ''}',
         src: '/art/${filename}',
         overlay: 6
-    },`;
+    },
+    
+      /* ========== IMAGE END ========== */`;
 
         // Add the new portfolio item to the existing content
         const updatedContent = currentContent.replace(
