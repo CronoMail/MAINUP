@@ -77,7 +77,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         await octokit.repos.createOrUpdateFileContents({
           owner: process.env.GITHUB_OWNER || '',
           repo: process.env.GITHUB_REPO || '',
-          path: `public/img/art/${filename}`,
+          path: `public/art/${filename}`,
           message: '[skip deploy] Upload new artwork',
           content: imageBuffer.toString('base64'),
           sha: imageSha
@@ -115,7 +115,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         isExternal: ${Boolean(twitterUrl)},
         category: [${categories.map(c => `'${c}'`).join(', ')}],
         description: '${fields.description?.[0] || ''}',
-        src: '/img/art/${filename}',
+        src: 'public/art/${filename}',
         overlay: 6
     },`;
 
