@@ -121,8 +121,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         // Add the new portfolio item to the existing content
         const updatedContent = currentContent.replace(
-          /export const portfolio\s*=\s*\[/,
-          `export const portfolio = [\n${newPortfolioItem}`
+          /const data\s*=\s*\[/,
+          `const data = [\n${newPortfolioItem}`
         );
 
         // Push to GitHub
