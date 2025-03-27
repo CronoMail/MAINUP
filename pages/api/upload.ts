@@ -66,7 +66,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           const { data: existingImage } = await octokit.repos.getContent({
             owner: process.env.GITHUB_OWNER || '',
             repo: process.env.GITHUB_REPO || '',
-            path: `assets/Artworks NEW/${filename}`
+            path: `public/img/art/${filename}`
           }) as { data: GitHubContent };
           imageSha = existingImage.sha;
         } catch (error) {
@@ -77,82 +77,60 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         await octokit.repos.createOrUpdateFileContents({
           owner: process.env.GITHUB_OWNER || '',
           repo: process.env.GITHUB_REPO || '',
-          path: `assets/Artworks NEW/${filename}`,
+          path: `public/img/art/${filename}`,
           message: '[skip deploy] Upload new artwork',
           content: imageBuffer.toString('base64'),
           sha: imageSha
         });
 
-        // Get current index.html content
+        // Get current portfolio.js content
         const { data: fileData } = await octokit.repos.getContent({
           owner: process.env.GITHUB_OWNER || '',
           repo: process.env.GITHUB_REPO || '',
-          path: 'index.html',
+          path: 'data/portfolio.js',
         }) as { data: GitHubContent };
 
         const currentContent = Buffer.from(fileData.content, 'base64').toString();
 
-        // Construct new artwork HTML
-        const newWorkHtml = `
-       
-                                <!-- ========== IMAGE ${fields.title?.[0]} ========== -->
-        
-                                         <div
-                                            class="folio-item work-item dsn-col-md-2 dsn-col-lg-3 ${fields.category?.[0] || '.illust'} column"
-                                            data-aos="fade-up">
-                                            <div
-                                                class="has-popup box-img before-z-index z-index-0 p-relative over-hidden folio-item__thumb"
-                                                data-overlay="0">
-                                                <a
-                                                    class="folio-item__thumb-link box-img"
-                                                    target="_blank"
-                                                    href="assets/Artworks NEW/${filename}"
-                                                    data-size="905x1280">
-                                                    <img class="cover-bg-img"
-                                                        src="assets/Artworks NEW/${filename}"
-                                                        alt="${fields.title?.[0]}">
-                                                </a>
-                                            </div>
-                                            <div class="folio-item__info">
-                                                <div
-                                                    class="folio-item__cat">${fields.category231?.[0] || '.illust'}/${fields.subcategory?.[0] || ''} ${new Date().getFullYear()}</div>
-                                                <h4
-                                                    class="folio-item__title">${fields.title?.[0]}</h4>
-                                            </div>
-                                         ${fields.twitterLink ? `
-                                            <a target="_blank"
-                                                href="${fields.twitterLink?.[0]}"
-                                                title="Twitter"
-                                                class="folio-item__project-link">Twitter</a>
-                                            <div class="folio-item__caption">
-                                                <p>Twitter</p>
-                                            </div>` : ''}
-                                        </div>
-        
-                                         <!-- ========== IMAGE END ========== -->
-        `
-        
-        ;
+        // Generate ID (usually the highest current ID + 1)
+        const idMatch = currentContent.match(/id:\s*(\d+)/g);
+        let nextId = 1;
+        if (idMatch) {
+          const ids = idMatch.map(match => parseInt(match.replace('id:', '').trim()));
+          nextId = Math.max(...ids) + 1;
+        }
 
-        // Find first image in gallery and add mt-80 class to it
+        // Parse categories
+        const mainCategory = fields.category231?.[0] || 'illustration';
+        const subCategory = fields.subcategory?.[0] || '';
+        const categories = [mainCategory];
+        if (subCategory) categories.push(subCategory);
+
+        // Create new portfolio item
+        const newPortfolioItem = `
+    {
+        id: ${nextId},
+        title: "${fields.title?.[0] || 'New Artwork'}",
+        link: '${twitterUrl || ''}',
+        isExternal: ${Boolean(twitterUrl)},
+        category: [${categories.map(c => `'${c}'`).join(', ')}],
+        description: '${fields.description?.[0] || ''}',
+        src: '/img/art/${filename}',
+        overlay: 6
+    },`;
+
+        // Add the new portfolio item to the existing content
         const updatedContent = currentContent.replace(
-          /(id="gallery-section"[^>]*>)([\s\S]*?)(<div[^>]*class="[^"]*folio-item[^"]*")/,
-          (match, openingTag, content, firstImageDiv) => {
-            // Add mt-80 to the first existing image
-            const modifiedFirstImageDiv = firstImageDiv.replace(
-              'class="',
-              'class="mt-80 '
-            );
-            return `${openingTag}${newWorkHtml}${modifiedFirstImageDiv}`;
-          }
+          /export const portfolio\s*=\s*\[/,
+          `export const portfolio = [\n${newPortfolioItem}`
         );
 
-        // Push to GitHub with a commit message that avoids triggering multiple builds
+        // Push to GitHub
         await octokit.repos.createOrUpdateFileContents({
           owner: process.env.GITHUB_OWNER || '',
           repo: process.env.GITHUB_REPO || '',
-          path: 'index.html',
-          message: '[deploy] Add new artwork to gallery', 
+          path: 'data/portfolio.js',
+          message: '[deploy] Add new artwork to portfolio', 
           content: Buffer.from(updatedContent).toString('base64'),
           sha: fileData.sha,
         });
@@ -160,8 +138,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         // Log success with more detail
         console.log('✅ Changes pushed to GitHub. Build status:', {
           imageUploaded: true,
-          htmlUpdated: true,
-          deploySkipped: true
+          portfolioUpdated: true,
+          deployTriggered: true
         });
 
         res.status(200).json({ 
