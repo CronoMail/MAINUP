@@ -142,28 +142,9 @@ export default function UploadForm() {
           <option value="vtube">Vtubers</option>
         </select>
 
-        <select
-          value={formData.category231}
-          onChange={(e) => setFormData({...formData, category231: e.target.value})}
-          className="w-full p-2 border rounded"
-          required
-        >
-          <option value="illustration">illustration</option>
-          <option value="Landscape">Landscape</option>
-          <option value="FanArt">FanArt</option>
-          <option value="OC">OC</option>
-          <option value="Commission">Commission</option>
-          <option value="Male">Male</option>
-          <option value="Vtubers">Vtubers</option>
-        </select>
+       
 
-        <input
-          type="text"
-          placeholder="Subcategory (e.g., FanArt 2024)"
-          value={formData.subcategory}
-          onChange={(e) => setFormData({...formData, subcategory: e.target.value})}
-          className="w-full p-2 border rounded"
-        />
+        
         
        
         
@@ -195,3 +176,30 @@ export default function UploadForm() {
     </form>
   );
 }
+
+/*
+<select
+value={formData.category231}
+onChange={(e) => setFormData({...formData, category231: e.target.value})}
+className="w-full p-2 border rounded"
+required
+>
+<option value="illustration">illustration</option>
+<option value="Landscape">Landscape</option>
+<option value="FanArt">FanArt</option>
+<option value="OC">OC</option>
+<option value="Commission">Commission</option>
+<option value="Male">Male</option>
+<option value="Vtubers">Vtubers</option>
+</select>
+
+
+<input
+          type="text"
+          placeholder="Subcategory (e.g., FanArt 2024)"
+          value={formData.subcategory}
+          onChange={(e) => setFormData({...formData, subcategory: e.target.value})}
+          className="w-full p-2 border rounded"
+        />
+
+*/
